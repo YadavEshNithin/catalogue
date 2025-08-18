@@ -33,7 +33,7 @@ pipeline {
                     sh """
                         npm install
                     """
-                }
+                }  
             }
         }
         stage('Docker build') {
