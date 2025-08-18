@@ -27,7 +27,16 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
+        stage('install dependencies') {
+            steps {
+                script {
+                    sh """
+                        npm install
+                    """
+                }
+            }
+        }
+        stage('Docker build') {
             steps {
                 echo 'Testing..'
             }
