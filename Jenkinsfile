@@ -46,7 +46,6 @@ pipeline {
                 sh """
                     aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
                     docker build -t ${PROJECT}/${COMPONENT}:${appVersion} .
-                    docker tag roboshop/catalogue:latest 010666226306.dkr.ecr.us-east-1.amazonaws.com/roboshop/catalogue:latest
                     docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
                 """
             }
