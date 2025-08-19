@@ -14,13 +14,10 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES') 
         disableConcurrentBuilds()
     }
-    // parameters {
-    //     // string(name: 'PERSON', defaultValue: 'Mr Jenkins NEW', description: 'Who should I say hello to?')
-    //     // text(name: 'BIOGRAPHY', defaultValue: 'JB', description: 'Enter some information about the person')
-    //     // booleanParam(name: 'TOGGLE', defaultValue: true, description: 'Toggle this value')
-    //     // choice(name: 'CHOICE', choices: ['One', 'Two', 'Three'], description: 'Pick something')
-    //     // password(name: 'PASSWORD', defaultValue: 'SECRET', description: 'Enter a password') 
-    // }
+    parameters {
+        booleanParam(name: 'deploy', defaultValue: false, description: 'Toggle this value')
+        choice(name: 'deploy_to', choices: ['dev', 'qa', 'prod'], description: 'Pick the Environment')
+    }
     stages {
         stage('Read package.json') {
             steps {
@@ -40,30 +37,43 @@ pipeline {
                 }    
             }
         }
+         stage('unit testing') {
+            steps {
+                script {
+                    sh """
+                        echo "unit testing"
+                    """
+                }    
+            }
+        }
         stage('Docker build') {
             steps {
-                withAWS(credentials: 'aws-credds', region: 'us-east-1') {
-                sh """
-                    aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
-                    docker build -t ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
-                    docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
-                """
-            }
+                script{
+                    withAWS(credentials: 'aws-credds', region: 'us-east-1') {
+                        sh """
+                            aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
+                            docker build -t ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
+                            docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+                        """
+                    }
+                }
             }
             
         }
-        stage('Deploy') {
-            // input {
-            //     message "Should we continue?"
-            //     ok "Yes, we should."
-            //     submitter "alice,bob"
-            //     parameters {
-            //         string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
-            //     }
-            // }
+        stage('Trigger Deploy') {
+            when{
+                expression { params.deploy }
+            }
             steps {
-                echo 'Deploying....'
-                // echo "Hello, ${PERSON}, nice to meet you."
+                script {
+                    build job: 'catalogue-cd', 
+                    parameters: [
+                        string(name: 'appVersion', value: "${appVersion}"),
+                        string(name: 'deploy_to', value: 'dev')
+                    ],
+                    propagate: false,  // even SG fails VPC will not be effected
+                    wait: false // VPC will not wait for SG pipeline completion
+                }
             }
         }
     }
