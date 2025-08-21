@@ -45,23 +45,57 @@ pipeline {
                 }    
             }
         }
-        stage('Sonar Scan') {
-            environment {
-                scannerHome = tool 'sonar-7.2'
+        // stage('Sonar Scan') {
+        //     environment {
+        //         scannerHome = tool 'sonar-7.2'
+        //     }
+        //     steps {
+        //         script {
+        //            // Sonar Server envrionment
+        //            withSonarQubeEnv(installationName: 'sonar-7.2') {
+        //                  sh "${scannerHome}/bin/sonar-scanner"
+        //            }
+        //         }
+        //     }
+        // }
+        // stage("Quality Gate") {
+        //     steps {
+        //         timeout(time: 1, unit: 'HOURS') {
+        //         waitForQualityGate abortPipeline: true }
+        //     }
+        // }
+         stage('Check Dependabot Alerts') {
+            environment { 
+                GITHUB_TOKEN = credentials('github-token')
             }
             steps {
                 script {
-                   // Sonar Server envrionment
-                   withSonarQubeEnv(installationName: 'sonar-7.2') {
-                         sh "${scannerHome}/bin/sonar-scanner"
-                   }
+                    // Fetch alerts from GitHub
+                    def response = sh(
+                        script: """
+                            curl -s -H "Accept: application/vnd.github+json" \
+                                 -H "Authorization: token ${GITHUB_TOKEN}" \
+                                 https://api.github.com/repos/YadavEshNithin/catalogue/dependabot/alerts
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    // Parse JSON
+                    def json = readJSON text: response
+
+                    // Filter alerts by severity
+                    def criticalOrHigh = json.findAll { alert ->
+                        def severity = alert?.security_advisory?.severity?.toLowerCase()
+                        def state = alert?.state?.toLowerCase()
+                        return (state == "open" && (severity == "critical" || severity == "high"))
+                    }
+
+                    if (criticalOrHigh.size() > 0) {
+                        error "❌ Found ${criticalOrHigh.size()} HIGH/CRITICAL Dependabot alerts. Failing pipeline!"
+                    } else {
+                        echo "✅ No HIGH/CRITICAL Dependabot alerts found."
+                    }
                 }
-            }
-        }
-        stage("Quality Gate") {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                waitForQualityGate abortPipeline: true }
             }
         }
         stage('Docker build') {
