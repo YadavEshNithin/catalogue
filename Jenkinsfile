@@ -45,19 +45,24 @@ pipeline {
                 }    
             }
         }
-        // stage('Sonar Scan') {
-        //     environment {
-        //         scannerHome = tool 'sonar-7.2'
-        //     }
+        stage('Sonar Scan') {
+            environment {
+                scannerHome = tool 'sonar-7.2'
+            }
+            steps {
+                script {
+                   // Sonar Server envrionment
+                   withSonarQubeEnv(installationName: 'sonar-7.2') {
+                         sh "${scannerHome}/bin/sonar-scanner"
+                   }
+                }
+            }
+        }
+        // stage("Quality Gate") {
         //     steps {
-        //         script {
-        //            // Sonar Server envrionment
-        //            withSonarQubeEnv(installationName: 'sonar-7.2') {
-        //                  sh "${scannerHome}/bin/sonar-scanner"
-        //            }
-        //         }
+        //         timeout(time: 1, unit: 'HOURS') {
+        //         waitForQualityGate abortPipeline: true }
         //     }
-        // }
         stage('Docker build') {
             steps {
                 script{
