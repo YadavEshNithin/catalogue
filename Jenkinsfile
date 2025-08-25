@@ -1,7 +1,8 @@
 @Library('samplePipeline') _
 
 def configMap = [
-    greeting : "hello_jenkins"
+    project : "roboshop",
+    component: "catalogue"
 ]
 
-samplePipeline(configMap)
+nodejsEksPipleline(configMap)
