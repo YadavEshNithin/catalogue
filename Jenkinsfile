@@ -1,8 +1,8 @@
-@Library('nodejsEksPipleline') _
+@Library('nodejsEksPipeline') _
 
 def configMap = [
     project : "roboshop",
     component: "catalogue"
 ]
 
-nodejsEksPipleline(configMap)
+nodejsEksPipeline(configMap)
