@@ -4,4 +4,4 @@ def configMap = [
     greeting = "hello_jenkins"
 ]
 
-samplePipeline(configMap)
+amplePipeline.call(configMap)
