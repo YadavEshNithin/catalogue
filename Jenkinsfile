@@ -1,3 +1,7 @@
 @Library('samplePipeline') _
 
-samplePipeline()
+def configMap = [
+    greeting = "hello_jenkins"
+]
+
+samplePipeline(configMap)
