@@ -4,5 +4,10 @@ def configMap = [
     project : "roboshop",
     component: "catalogue"
 ]
-
-nodejsEksPipeline(configMap)
+if( ! env.BRANCH_NAME.equalsIgnoreCase('main') ){ // if not equals to main
+    nodejsEksPipeline(configMap) // by default it will call, call function inside this pipeline
+}
+else{
+    echo "Please proceed with PROD process"
+}
+// nodejsEksPipeline(configMap)
