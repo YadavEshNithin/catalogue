@@ -1,4 +1,4 @@
-@Library('samplePipeline') _
+@Library('nodejsEksPipleline') _
 
 def configMap = [
     project : "roboshop",
