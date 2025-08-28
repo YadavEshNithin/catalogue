@@ -1,4 +1,4 @@
-@Library('nodejsEksPipeline') _
+@Library('jenkins-shared-library') _
 
 def configMap = [
     project : "roboshop",
